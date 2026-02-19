@@ -6,8 +6,8 @@ use bevy_reflect_derive::impl_type_path;
 
 use crate::{
     generics::impl_generic_info_methods, hash_error, type_info::impl_type_methods, ApplyError,
-    Generics, PartialReflect, Reflect, ReflectKind, ReflectMut, ReflectOwned, ReflectRef, Type,
-    TypeInfo, TypePath,
+    Generics, MaybeTyped, PartialReflect, Reflect, ReflectKind, ReflectMut, ReflectOwned,
+    ReflectRef, Type, TypeInfo, TypePath,
 };
 
 /// A trait used to power [set-like] operations via [reflection].
@@ -96,6 +96,11 @@ pub trait Set: PartialReflect {
 
     /// Checks if the given value is contained in the set
     fn contains(&self, value: &dyn PartialReflect) -> bool;
+
+    /// Will return `None` if [`TypeInfo`] is not available.
+    fn get_represented_set_info(&self) -> Option<&'static SetInfo> {
+        self.get_represented_type_info()?.as_set().ok()
+    }
 }
 
 /// A container for compile-time set info.
@@ -103,6 +108,7 @@ pub trait Set: PartialReflect {
 pub struct SetInfo {
     ty: Type,
     generics: Generics,
+    value_info: fn() -> Option<&'static TypeInfo>,
     value_ty: Type,
     #[cfg(feature = "reflect_documentation")]
     docs: Option<&'static str>,
@@ -110,10 +116,11 @@ pub struct SetInfo {
 
 impl SetInfo {
     /// Create a new [`SetInfo`].
-    pub fn new<TSet: Set + TypePath, TValue: Reflect + TypePath>() -> Self {
+    pub fn new<TSet: Set + TypePath, TValue: Reflect + TypePath + MaybeTyped>() -> Self {
         Self {
             ty: Type::of::<TSet>(),
             generics: Generics::new(),
+            value_info: TValue::maybe_type_info,
             value_ty: Type::of::<TValue>(),
             #[cfg(feature = "reflect_documentation")]
             docs: None,
@@ -127,6 +134,14 @@ impl SetInfo {
     }
 
     impl_type_methods!(ty);
+
+    /// The [`TypeInfo`] of the set value.
+    ///
+    /// Returns `None` if the set value does not contain static type information,
+    /// such as for dynamic types.
+    pub fn value_info(&self) -> Option<&'static TypeInfo> {
+        (self.value_info)()
+    }
 
     /// The [type] of the value.
     ///

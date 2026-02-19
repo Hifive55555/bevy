@@ -1,7 +1,7 @@
 use crate::{
-    ArrayInfo, DynamicArray, DynamicEnum, DynamicList, DynamicMap, DynamicStruct, DynamicTuple,
-    DynamicTupleStruct, EnumInfo, Generics, ListInfo, MapInfo, PartialReflect, Reflect,
-    ReflectKind, SetInfo, StructInfo, TupleInfo, TupleStructInfo, TypePath, TypePathTable,
+    ArrayInfo, DynamicArray, DynamicEnum, DynamicList, DynamicMap, DynamicSet, DynamicStruct,
+    DynamicTuple, DynamicTupleStruct, EnumInfo, Generics, ListInfo, MapInfo, PartialReflect,
+    Reflect, ReflectKind, SetInfo, StructInfo, TupleInfo, TupleStructInfo, TypePath, TypePathTable,
 };
 use core::{
     any::{Any, TypeId},
@@ -139,6 +139,8 @@ impl MaybeTyped for DynamicList {}
 impl MaybeTyped for DynamicArray {}
 
 impl MaybeTyped for DynamicTuple {}
+
+impl MaybeTyped for DynamicSet {}
 
 /// Dynamic dispatch for [`Typed`].
 ///
@@ -360,6 +362,7 @@ impl TypeInfo {
     impl_cast_method!(as_list: List => ListInfo);
     impl_cast_method!(as_array: Array => ArrayInfo);
     impl_cast_method!(as_map: Map => MapInfo);
+    impl_cast_method!(as_set: Set => SetInfo);
     impl_cast_method!(as_enum: Enum => EnumInfo);
     impl_cast_method!(as_opaque: Opaque => OpaqueInfo);
 }
